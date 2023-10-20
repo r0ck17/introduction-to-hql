@@ -38,7 +38,6 @@ public class UserDao {
      * Возвращает первые {limit} сотрудников, упорядоченных по дате рождения (в порядке возрастания)
      */
     public List<User> findLimitedUsersOrderedByBirthday(Session session, int limit) {
-        // TODO : implement
         return session.createQuery("""
                         SELECT u
                         FROM User u
@@ -53,7 +52,7 @@ public class UserDao {
      */
     public List<User> findAllByCompanyName(Session session, String companyName) {
         return session.createQuery("""
-                        FROM User u 
+                        FROM User u
                         WHERE u.company.name = :company
                         """, User.class)
                 .setParameter("company", companyName)
@@ -78,7 +77,7 @@ public class UserDao {
      */
     public Double findAveragePaymentAmountByFirstAndLastNames(Session session, String firstName, String lastName) {
         return session.createQuery("""
-                SELECT AVG(p.amount) 
+                SELECT AVG(p.amount)
                 FROM Payment p
                 WHERE p.receiver.personalInfo.firstname = :firstName AND p.receiver.personalInfo.lastname = :lastName
                 """, Double.class)
@@ -92,7 +91,7 @@ public class UserDao {
      */
     public List<Object[]> findCompanyNamesWithAvgUserPaymentsOrderedByCompanyName(Session session) {
         return session.createQuery("""
-                SELECT c.name, AVG(p.amount) 
+                SELECT c.name, AVG(p.amount)
                 FROM Company c JOIN c.users u JOIN u.payments p
                 GROUP BY c.name
                 ORDER BY c.name
