@@ -7,6 +7,7 @@ import lombok.experimental.UtilityClass;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.Month;
 
@@ -31,6 +32,12 @@ public class TestDataImporter {
         User dianeGreene = saveUser(session, "Diane", "Greene",
                 LocalDate.of(1955, Month.JANUARY, 1), google);
 
+        saveProfile(session, "street 1", "ru", billGates);
+        saveProfile(session, "street 2", "ru", steveJobs);
+        saveProfile(session, "street 3", "en", sergeyBrin);
+        saveProfile(session, "street 4", "en", timCook);
+        saveProfile(session, "street 5", "ru", dianeGreene);
+
         savePayment(session, billGates, 100);
         savePayment(session, billGates, 300);
         savePayment(session, billGates, 500);
@@ -49,14 +56,24 @@ public class TestDataImporter {
         savePayment(session, dianeGreene, 300);
         savePayment(session, dianeGreene, 300);
         savePayment(session, dianeGreene, 300);
+
+        Chat chat1 = saveChat(session, "chat 1");
+        Chat chat2 = saveChat(session, "chat 2");
+        Chat chat3 = saveChat(session, "chat 3");
+
+        saveUserChat(session, "createdBy1", chat1, billGates);
+        saveUserChat(session, "createdBy2", chat1, steveJobs);
+        saveUserChat(session, "createdBy3", chat2, sergeyBrin);
+        saveUserChat(session, "createdBy4", chat3, timCook);
+        saveUserChat(session, "createdBy5", chat3, dianeGreene);
     }
 
     private Company saveCompany(Session session, String name) {
         Company company = Company.builder()
                 .name(name)
                 .build();
-        session.save(company);
 
+        session.save(company);
         return company;
     }
 
@@ -74,8 +91,8 @@ public class TestDataImporter {
                         .build())
                 .company(company)
                 .build();
-        session.save(user);
 
+        session.save(user);
         return user;
     }
 
@@ -84,6 +101,38 @@ public class TestDataImporter {
                 .receiver(user)
                 .amount(amount)
                 .build();
+
         session.save(payment);
+    }
+
+    private Chat saveChat(Session session, String name) {
+        Chat chat = Chat.builder()
+                .name(name)
+                .build();
+
+        session.save(chat);
+        return chat;
+    }
+
+    private UserChat saveUserChat(Session session, String createdBy, Chat chat, User user) {
+        UserChat userChat = UserChat.builder()
+                .user(user)
+                .chat(chat)
+                .createdBy(createdBy)
+                .createdAt(Instant.now())
+                .build();
+
+        session.save(userChat);
+        return userChat;
+    }
+
+    private Profile saveProfile(Session session, String street, String language, User user) {
+        Profile profile = Profile.builder()
+                .street(street)
+                .language(language)
+                .build();
+        profile.setUser(user);
+        session.save(profile);
+        return profile;
     }
 }

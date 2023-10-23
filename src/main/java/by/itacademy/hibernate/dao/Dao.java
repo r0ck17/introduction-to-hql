@@ -1,9 +1,8 @@
 package by.itacademy.hibernate.dao;
 
+import by.itacademy.hibernate.entity.Chat;
+import by.itacademy.hibernate.entity.Company;
 import by.itacademy.hibernate.entity.Payment;
-import by.itacademy.hibernate.entity.QCompany;
-import by.itacademy.hibernate.entity.QPayment;
-import by.itacademy.hibernate.entity.QUser;
 import by.itacademy.hibernate.entity.User;
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.Order;
@@ -13,19 +12,20 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.hibernate.Session;
 
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Root;
 import java.util.List;
+import java.util.Optional;
 
-import static by.itacademy.hibernate.entity.QCompany.*;
-import static by.itacademy.hibernate.entity.QPayment.*;
-import static by.itacademy.hibernate.entity.QUser.*;
+import static by.itacademy.hibernate.entity.QChat.chat;
+import static by.itacademy.hibernate.entity.QCompany.company;
+import static by.itacademy.hibernate.entity.QPayment.payment;
+import static by.itacademy.hibernate.entity.QProfile.profile;
+import static by.itacademy.hibernate.entity.QUser.user;
+import static by.itacademy.hibernate.entity.QUserChat.userChat;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class UserDao {
+public class Dao {
 
-    private static final UserDao INSTANCE = new UserDao();
+    private static final Dao INSTANCE = new Dao();
 
     /**
      * Возвращает всех сотрудников
@@ -135,7 +135,68 @@ public class UserDao {
                 .fetch();
     }
 
-    public static UserDao getInstance() {
+    /**
+     * Возвращает название чата и количество пользователей, находящихся в нем
+     */
+    public List<Tuple> findUsersCountInChats(Session session) {
+        return new JPAQuery<User>(session)
+                .select(chat.name, userChat.count())
+                .from(userChat)
+                .join(userChat.chat, chat)
+                .groupBy(chat.name)
+                .fetch();
+    }
+
+    /**
+     * Возвращает список пользователей с указанным языком в профиле, отсортированных в алфавитном порядке по username
+     */
+    public List<User> findUsersByLanguage(Session session, String language) {
+        return new JPAQuery<User>(session)
+                .select(user)
+                .from(user)
+                .join(user.profile, profile)
+                .where(user.profile.language.eq(language))
+                .orderBy(user.username.asc())
+                .fetch();
+    }
+
+    /**
+     * Возвращает самый большой платеж
+     */
+    public Optional<Payment> findBiggestPayment(Session session) {
+        return Optional.ofNullable(
+                new JPAQuery<Payment>(session)
+                        .select(payment)
+                        .from(payment)
+                        .orderBy(payment.amount.desc())
+                        .fetchFirst());
+    }
+
+
+    /**
+     * Возвращает список всех пользователей с указанным именем
+     */
+    public List<User> findUsersWithName(Session session, String name) {
+        return new JPAQuery<User>(session)
+                .select(user)
+                .from(user)
+                .where(user.personalInfo.firstname.eq(name))
+                .fetch();
+    }
+
+    /**
+     * Возвращает список компаний, сотрудники которых сидят в определенном чате
+     */
+    public List<Company> findUsersCompaniesInChat(Session session, Chat chat) {
+        return new JPAQuery<Company>(session)
+                .select(user.company)
+                .from(userChat)
+                .join(userChat.user, user)
+                .where(userChat.chat.eq(chat))
+                .fetch();
+
+    }
+    public static Dao getInstance() {
         return INSTANCE;
     }
 }
